@@ -1,0 +1,7 @@
+.vscode/*
+*.out
+*.exe
+*.dSYM
+*.DS_Store
+desktop.ini
+*/desktop.ini
