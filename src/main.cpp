@@ -288,6 +288,11 @@ Netlist::Netlist(ifstream &_f)
         {
             break;
         }
+        else{
+            cerr << "the file may have wrong format. we only support Verilog language (.v) currently." << endl;
+            cerr << "the loading process is incomplete." << endl;
+            break;
+        }
     }
 }
 
@@ -300,7 +305,6 @@ int main(int argc, char *argv[])
     if (argc != 5)
     {
         cout_usage();
-        // cout << "Using default: ";
         return 1;
     }
 
@@ -308,7 +312,7 @@ int main(int argc, char *argv[])
     ofstream filePatch(argv[4]);
     if (!fileR1 || !fileR2 || !fileG1 || !filePatch)
     {
-        cerr << "Can't open files." << endl;
+        cerr << "Can't open some of the files." << endl;
         return 1;
     }
     Netlist R1 = Netlist(fileR1);
