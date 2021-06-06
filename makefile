@@ -12,7 +12,7 @@ OPTFLAGS = -O2
 
 
 all: bin/eco
-	@echo -n ""
+	@echo ""
 
 bin/eco: src/main.cpp
 	mkdir -p bin
