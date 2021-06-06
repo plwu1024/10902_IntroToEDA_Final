@@ -1,7 +1,10 @@
 .vscode/*
+bin/*
+*.o
+lib/*.a
+lib/*.o
 *.out
 *.exe
-*.dSYM
 *.DS_Store
 desktop.ini
 */desktop.ini
