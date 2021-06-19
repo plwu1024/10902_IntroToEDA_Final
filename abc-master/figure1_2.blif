@@ -1,0 +1,13 @@
+.model figure1_2
+.inputs a b c
+.outputs f
+.names a b g
+10 1
+.names a b h
+01 1
+.names g c i
+11 1
+.names i h f
+10 1
+01 1
+.end
