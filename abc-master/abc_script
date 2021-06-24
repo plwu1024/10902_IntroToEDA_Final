@@ -1,0 +1,1 @@
+runfindtarget testcases/test1/g1.v testcases/test1/r2.v testcases/test1/g1_t.v testcases/test1/r2_t.v
