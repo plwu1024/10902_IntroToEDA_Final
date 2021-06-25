@@ -4,6 +4,7 @@
 #include "base/main/mainInt.h"
 // #include "base/acb/acbFunc.c"
 #include <iostream>
+#include <queue>
 using namespace std;
 
 void printFanins(int level, Acb_Ntk_t *p, int iObj){
@@ -11,11 +12,9 @@ void printFanins(int level, Acb_Ntk_t *p, int iObj){
         printf("  ");
     }
     printf("num= %d, name= %s\n", iObj, Acb_ObjNameStr(p, iObj));
-    if (!Acb_ObjIsCi(p, iObj)){
-        int objk, k;
-        Acb_ObjForEachFanin(p, iObj, objk, k){
-            printFanins(level+1, p, objk);
-        }
+    int objk, k;
+    Acb_ObjForEachFanin(p, iObj, objk, k){
+        printFanins(level+1, p, objk);
     }
 }
 
@@ -45,13 +44,56 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
     assert(Acb_NtkCoNum(pNtkF) == Acb_NtkCoNum(pNtkG));
 
     printf("trying to find target ...\n");
+    printf("\nBy Ntk Order...\n");
     int iterF, iterG, objF, objG;
     Acb_NtkForEachObj(pNtkF, iterF){
         printf("Obj, num= %d, name= %s, type= %d\n", iterF, Acb_ObjNameStr(pNtkF, iterF), Acb_ObjType(pNtkF, iterF));
     }
+
+    // DFS
+    printf("\nDFS...\n");
     Acb_NtkForEachCo(pNtkF, objF, iterF){
         printf("Co, num= %d, name= %s\n", objF, Acb_ObjNameStr(pNtkF, objF));
         printFanins(1, pNtkF, objF);
+    }
+
+    // BFS
+    printf("\nBFS...\n");
+    int ObjAmountF = Acb_NtkObjNum(pNtkF);
+    int NtkObjColor[ObjAmountF];    // traversed: 1
+    int NtkObjd[ObjAmountF];        // root: 0
+    for (int i = 0; i< ObjAmountF; i++){
+        NtkObjColor[i] = 0;
+        NtkObjd[i] = 0;
+    }
+    queue<int> NtkPrevLevel;
+    queue<int> NtkNextLevel;
+    Acb_NtkForEachCo(pNtkF, objF, iterF){
+        printf("Co, num= %d, name= %s\n", objF, Acb_ObjNameStr(pNtkF, objF));
+        NtkNextLevel.push(objF);
+        NtkObjColor[objF] ^= 1;
+    }
+    while (!NtkNextLevel.empty()){
+        while (!NtkNextLevel.empty()){
+            NtkPrevLevel.push(NtkNextLevel.front());
+            NtkNextLevel.pop();
+        }
+        while (!NtkPrevLevel.empty()){
+            int Obj = NtkPrevLevel.front();
+            NtkPrevLevel.pop();
+            int fanin, k;
+            for (int i=0; i<NtkObjd[Obj]; i++){
+                printf("  ");
+            }
+            printf("Obj, num= %d, name= %s, type= %d\n", Obj, Acb_ObjNameStr(pNtkF, Obj), Acb_ObjType(pNtkF, Obj));
+            Acb_ObjForEachFanin(pNtkF, Obj, fanin, k){
+                if (!NtkObjColor[fanin]){
+                    NtkNextLevel.push(fanin);
+                    NtkObjColor[fanin] ^= 1;
+                    NtkObjd[fanin] = NtkObjd[Obj] + 1;
+                }
+            }
+        }
     }
 
     char *pFileNamesNew[4] = {NULL};
