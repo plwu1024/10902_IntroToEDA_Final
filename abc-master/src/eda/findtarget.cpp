@@ -361,17 +361,14 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
     queue<int> NtkNextLevelF, NtkNextLevelG, NtkPrevLevelF, NtkPrevLevelG;
     Acb_NtkForEachCo(pNtkF, objF, iterF)
     {
-        // printf("Co, num= %d, name= %s\n", objF, Acb_ObjNameStr(pNtkF, objF));
         NtkNextLevelF.push(objF);
         NtkObjColorF[objF] ^= 1;
     }
     Acb_NtkForEachCo(pNtkG, objG, iterG)
     {
-        // printf("Co, num= %d, name= %s\n", objG, Acb_ObjNameStr(pNtkG, objG));
         NtkNextLevelG.push(objG);
         NtkObjColorG[objG] ^= 1;
     }
-    int ObjF, ObjG, fanin, k;
     while (!NtkNextLevelF.empty() && !NtkNextLevelG.empty())
     {
         myGetNextLevel(pNtkF, NtkNextLevelF, NtkPrevLevelF, ObjTypeHashF, fVerbose);
@@ -381,14 +378,6 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
             cout << "Difference detected.\n"
                  << "F= " << ObjTypeHashF << endl
                  << "G= " << ObjTypeHashG << endl;
-            if (ObjTypeHashF > ObjTypeHashG)
-            {
-                cout << "Divide: " << (ObjTypeHashF / ObjTypeHashG) << endl;
-            }
-            else
-            {
-                cout << "Divide: " << (ObjTypeHashG / ObjTypeHashF) << endl;
-            }
             printLevelAll(pNtkF, NtkNextLevelF, "ObjF_Next");
             printLevelAll(pNtkG, NtkNextLevelG, "ObjG_Next");
             printLevelAll(pNtkF, NtkPrevLevelF, "ObjF_Prev");
@@ -400,7 +389,6 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
             cout << "no diff in this level." << endl;
         }
     }
-    cout << "totally complete." << endl;
 
     // char *pFileNamesNew[4] = {NULL};
     // pFileNamesNew[0] = pFileNames[0];
