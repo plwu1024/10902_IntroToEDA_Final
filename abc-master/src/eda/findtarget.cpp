@@ -7,14 +7,272 @@
 #include <queue>
 using namespace std;
 
-void printFanins(int level, Acb_Ntk_t *p, int iObj){
-    for (int i=0; i<level; i++){
-        printf("  ");
+char *myTypeName(Acb_Ntk_t *p, int iObj)
+{
+    int type = Acb_ObjType(p, iObj);
+    switch (type)
+    {
+    case ABC_OPER_BIT_BUF:
+        return "BUF";
+    case ABC_OPER_BIT_INV:
+        return "INV";
+    case ABC_OPER_BIT_AND:
+        return "AND";
+    case ABC_OPER_BIT_NAND:
+        return "NAND";
+    case ABC_OPER_BIT_OR:
+        return "OR";
+    case ABC_OPER_BIT_NOR:
+        return "NOR";
+    case ABC_OPER_BIT_XOR:
+        return "XOR";
+    case ABC_OPER_BIT_NXOR:
+        return "NXOR";
+    case ABC_OPER_CONST_F:
+        return "CONST0";
+    case ABC_OPER_CONST_T:
+        return "CONST1";
+    case ABC_OPER_NONE:
+        return "UNUSED";
+    case ABC_OPER_PI:
+        return "INPUT"; // 01  input
+    case ABC_OPER_PO:
+        return "OUTPUT"; // 02  output
+    case ABC_OPER_CI:
+        return "COMIN"; // 03  combinational input
+    case ABC_OPER_CO:
+        return "COMOUT"; // 04  conbinational output
+    default:
+        return "UNDEF";
+    }
+}
+
+void printFanins(int level, Acb_Ntk_t *p, int iObj)
+{
+    for (int i = 0; i < level; i++)
+    {
+        printf(" ");
     }
     printf("num= %d, name= %s\n", iObj, Acb_ObjNameStr(p, iObj));
     int objk, k;
-    Acb_ObjForEachFanin(p, iObj, objk, k){
-        printFanins(level+1, p, objk);
+    Acb_ObjForEachFanin(p, iObj, objk, k)
+    {
+        printFanins(level + 1, p, objk);
+    }
+}
+
+void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+{
+    int objk, k;
+    Acb_ObjForEachFanin(p, iObj, objk, k)
+    {
+        switch (Acb_ObjType(p, objk))
+        {
+        // case ABC_OPER_BIT_INV:
+        // {
+        //     int objm, m;
+        //     Acb_ObjForEachFanin(p, objk, objm, m)
+        //     {
+        //         switch (Acb_ObjType(p, objm))
+        //         {
+        //         case ABC_OPER_BIT_INV:
+        //             DFS_buf(p, objm, put_into_queue);
+        //             break;
+        //         default:
+        //             put_into_queue.push(objm);
+        //             break;
+        //         }
+        //     }
+        // }
+        case ABC_OPER_BIT_BUF:
+            DFS_buf(p, objk, put_into_queue);
+            break;
+        default:
+            put_into_queue.push(objk);
+            break;
+        }
+    }
+}
+// void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+// {
+//     int objk, k;
+//     Acb_ObjForEachFanin(p, iObj, objk, k)
+//     {
+//         switch (Acb_ObjType(p, objk))
+//         {
+//         case ABC_OPER_BIT_INV:
+//             DFS_buf(p, objk, put_into_queue);
+//             break;
+//         case ABC_OPER_BIT_BUF:
+//             DFS_inv(p, objk, put_into_queue);
+//             break;
+//         default:
+//             put_into_queue.push(objk);
+//         }
+//     }
+// }
+void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+{
+    int objk, k;
+    Acb_ObjForEachFanin(p, iObj, objk, k)
+    {
+        switch (Acb_ObjType(p, objk))
+        {
+        // case ABC_OPER_BIT_INV:
+        // {
+        //     int objm, m;
+        //     int isPut = 0;
+        //     Acb_ObjForEachFanin(p, objk, objm, m)
+        //     {
+        //         switch (Acb_ObjType(p, objm))
+        //         {
+        //         case ABC_OPER_BIT_INV:
+        //             DFS_and(p, objm, put_into_queue);
+        //             isPut = 1;
+        //             break;
+        //         default:
+        //             break;
+        //         }
+        //     }
+        //     if (!isPut)
+        //     {
+        //         put_into_queue.push(objk);
+        //     }
+        //     break;
+        // }
+        case ABC_OPER_BIT_AND:
+        case ABC_OPER_BIT_BUF:
+            DFS_and(p, objk, put_into_queue);
+            break;
+        default:
+            put_into_queue.push(objk);
+            break;
+        }
+    }
+}
+void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+{
+    int objk, k;
+    Acb_ObjForEachFanin(p, iObj, objk, k)
+    {
+        switch (Acb_ObjType(p, objk))
+        {
+        // case ABC_OPER_BIT_INV:
+        // {
+        //     int objm, m, isPut = 0;
+        //     Acb_ObjForEachFanin(p, objk, objm, m)
+        //     {
+        //         switch (Acb_ObjType(p, objm))
+        //         {
+        //         case ABC_OPER_BIT_INV:
+        //             DFS_or(p, objm, put_into_queue);
+        //             isPut ^= 1;
+        //             break;
+        //         default:
+        //             break;
+        //         }
+        //     }
+        //     if (!isPut)
+        //     {
+        //         put_into_queue.push(objk);
+        //     }
+        //     break;
+        // }
+        case ABC_OPER_BIT_OR:
+        case ABC_OPER_BIT_BUF:
+            DFS_or(p, objk, put_into_queue);
+            break;
+        default:
+            put_into_queue.push(objk);
+            break;
+        }
+    }
+}
+
+void myPrimeStructuralhashing(long long &prevhash, int type)
+{
+    switch (type)
+    {
+    case ABC_OPER_BIT_BUF:
+        prevhash *= 2;
+        break;
+    case ABC_OPER_BIT_INV:
+        prevhash *= 3;
+        break;
+    case ABC_OPER_BIT_AND:
+        prevhash *= 5;
+        break;
+    case ABC_OPER_BIT_NAND:
+        prevhash *= 7;
+        break;
+    case ABC_OPER_BIT_OR:
+        prevhash *= 11;
+        break;
+    case ABC_OPER_BIT_NOR:
+        prevhash *= 13;
+        break;
+    case ABC_OPER_BIT_XOR:
+        prevhash *= 17;
+        break;
+    case ABC_OPER_BIT_NXOR:
+        prevhash *= 19;
+        break;
+    case ABC_OPER_CONST_F:
+        prevhash *= 23;
+        break;
+    case ABC_OPER_CONST_T:
+        prevhash *= 29;
+        break;
+    }
+}
+
+void myGetNextLevel(Acb_Ntk_t *pNtk, queue<int> &_fromLevel, queue<int> &_oldLevel, long long &_prevHash, int fVerbose = 0)
+{
+    int _obj, _fanin, _k;
+    queue<int> _tmpLevel;
+    _oldLevel = _fromLevel;
+    while (!_fromLevel.empty())
+    {
+        _obj = _fromLevel.front();
+        if (fVerbose)
+        {
+            printf("Obj: %5d, %5s, type= %s\n", _obj, Acb_ObjNameStr(pNtk, _obj), myTypeName(pNtk, _obj));
+        }
+        switch (Acb_ObjType(pNtk, _fromLevel.front()))
+        {
+        case ABC_OPER_BIT_AND:
+            DFS_and(pNtk, _fromLevel.front(), _tmpLevel);
+            break;
+        case ABC_OPER_BIT_OR:
+            DFS_or(pNtk, _fromLevel.front(), _tmpLevel);
+            break;
+        default:
+            Acb_ObjForEachFanin(pNtk, _fromLevel.front(), _fanin, _k)
+            {
+                switch (Acb_ObjType(pNtk, _fanin))
+                {
+                case ABC_OPER_BIT_BUF:
+                    DFS_buf(pNtk, _fromLevel.front(), _tmpLevel);
+                    break;
+                // case ABC_OPER_BIT_INV:
+                //     DFS_inv(pNtk, _fromLevel.front(), _tmpLevel);
+                //     break;
+                default:
+                    _tmpLevel.push(_fanin);
+                }
+            }
+            break;
+        }
+        // Acb_ObjForEachFanin(pNtkF, _fromLevel.front(), fanin, k){
+        //     myPrimeStructuralhashing(ObjTypeHashF, Acb_ObjType(pNtkF, fanin));
+        // }
+        _fromLevel.pop();
+    }
+    while (!_tmpLevel.empty())
+    {
+        _fromLevel.push(_tmpLevel.front());
+        myPrimeStructuralhashing(_prevHash, Acb_ObjType(pNtk, _tmpLevel.front()));
+        _tmpLevel.pop();
     }
 }
 
@@ -44,62 +302,98 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
     assert(Acb_NtkCoNum(pNtkF) == Acb_NtkCoNum(pNtkG));
 
     printf("trying to find target ...\n");
-    printf("\nBy Ntk Order...\n");
     int iterF, iterG, objF, objG;
-    Acb_NtkForEachObj(pNtkF, iterF){
-        printf("Obj, num= %d, name= %s, type= %d\n", iterF, Acb_ObjNameStr(pNtkF, iterF), Acb_ObjType(pNtkF, iterF));
+    if (fVeryVerbose)
+    {
+        printf("\nBy Ntk Order...\n");
+        Acb_NtkForEachObj(pNtkF, iterF)
+        {
+            printf("Obj, num= %d, name= %s, type= %d\n", iterF, Acb_ObjNameStr(pNtkF, iterF), Acb_ObjType(pNtkF, iterF));
+        }
     }
 
     // DFS
-    printf("\nDFS...\n");
-    Acb_NtkForEachCo(pNtkF, objF, iterF){
-        printf("Co, num= %d, name= %s\n", objF, Acb_ObjNameStr(pNtkF, objF));
-        printFanins(1, pNtkF, objF);
+    if (fVeryVerbose)
+    {
+        printf("\nDFS...\n");
+        Acb_NtkForEachCo(pNtkF, objF, iterF)
+        {
+            printf("Co, num= %d, name= %s\n", objF, Acb_ObjNameStr(pNtkF, objF));
+            printFanins(1, pNtkF, objF);
+        }
     }
 
     // BFS
-    printf("\nBFS...\n");
-    int ObjAmountF = Acb_NtkObjNum(pNtkF);
-    int NtkObjColor[ObjAmountF];    // traversed: 1
-    int NtkObjd[ObjAmountF];        // root: 0
-    for (int i = 0; i< ObjAmountF; i++){
-        NtkObjColor[i] = 0;
-        NtkObjd[i] = 0;
-    }
-    queue<int> NtkPrevLevel;
-    queue<int> NtkNextLevel;
-    Acb_NtkForEachCo(pNtkF, objF, iterF){
-        printf("Co, num= %d, name= %s\n", objF, Acb_ObjNameStr(pNtkF, objF));
-        NtkNextLevel.push(objF);
-        NtkObjColor[objF] ^= 1;
-    }
-    while (!NtkNextLevel.empty()){
-        while (!NtkNextLevel.empty()){
-            NtkPrevLevel.push(NtkNextLevel.front());
-            NtkNextLevel.pop();
-        }
-        while (!NtkPrevLevel.empty()){
-            int Obj = NtkPrevLevel.front();
-            NtkPrevLevel.pop();
-            int fanin, k;
-            for (int i=0; i<NtkObjd[Obj]; i++){
-                printf("  ");
-            }
-            printf("Obj, num= %d, name= %s, type= %d\n", Obj, Acb_ObjNameStr(pNtkF, Obj), Acb_ObjType(pNtkF, Obj));
-            Acb_ObjForEachFanin(pNtkF, Obj, fanin, k){
-                if (!NtkObjColor[fanin]){
-                    NtkNextLevel.push(fanin);
-                    NtkObjColor[fanin] ^= 1;
-                    NtkObjd[fanin] = NtkObjd[Obj] + 1;
-                }
-            }
-        }
-    }
+    // TODO
 
-    char *pFileNamesNew[4] = {NULL};
-    pFileNamesNew[0] = pFileNames[0];
-    pFileNamesNew[1] = pFileNames[1];
-    pFileNamesNew[2] = pFileNames[4];
+    // BFS with DFS and compair
+    printf("\nBFS...\n");
+    int ObjAmountF = Acb_NtkObjNum(pNtkF), ObjAmountG = Acb_NtkObjNum(pNtkG);
+    int NtkObjColorF[ObjAmountF], NtkObjColorG[ObjAmountG]; // traversed: 1
+    int NtkObjdF[ObjAmountF], NtkObjdG[ObjAmountG];         // root: 0
+    long long ObjTypeHashF = 1, ObjTypeHashG = 1;
+    for (int i = 0; i < ObjAmountF; i++)
+    {
+        NtkObjColorF[i] = 0;
+        NtkObjdF[i] = 0;
+        NtkObjColorG[i] = 0;
+        NtkObjdG[i] = 0;
+    }
+    queue<int> NtkNextLevelF, NtkNextLevelG, NtkPrevLevelF, NtkPrevLevelG;
+    Acb_NtkForEachCo(pNtkF, objF, iterF)
+    {
+        printf("Co, num= %d, name= %s\n", objF, Acb_ObjNameStr(pNtkF, objF));
+        NtkNextLevelF.push(objF);
+        NtkObjColorF[objF] ^= 1;
+    }
+    Acb_NtkForEachCo(pNtkG, objG, iterG)
+    {
+        printf("Co, num= %d, name= %s\n", objG, Acb_ObjNameStr(pNtkG, objG));
+        NtkNextLevelG.push(objG);
+        NtkObjColorG[objG] ^= 1;
+    }
+    int ObjF, ObjG, fanin, k;
+    while (!NtkNextLevelF.empty() && !NtkNextLevelG.empty())
+    {
+        myGetNextLevel(pNtkF, NtkNextLevelF, NtkPrevLevelF, ObjTypeHashF, fVerbose);
+        myGetNextLevel(pNtkG, NtkNextLevelG, NtkPrevLevelG, ObjTypeHashG, fVerbose);
+        if (ObjTypeHashF != ObjTypeHashG)
+        {
+            cout << "Difference detected.\n"
+                 << "F= " << ObjTypeHashF << endl
+                 << "G= " << ObjTypeHashG << endl;
+            if (ObjTypeHashF > ObjTypeHashG)
+            {
+                cout << "Divide: " << (ObjTypeHashF / ObjTypeHashG) << endl;
+            }
+            else
+            {
+                cout << "Divide: " << (ObjTypeHashG / ObjTypeHashF) << endl;
+            }
+            while (!NtkNextLevelF.empty()){
+                int _obj = NtkNextLevelF.front();
+                printf("ObjF: %5d, %5s, type= %s\n", _obj, Acb_ObjNameStr(pNtkF, _obj), myTypeName(pNtkF, _obj));
+                NtkNextLevelF.pop();
+            }
+            cout << endl;
+            while (!NtkNextLevelG.empty()){
+                int _obj = NtkNextLevelG.front();
+                printf("ObjG: %5d, %5s, type= %s\n", _obj, Acb_ObjNameStr(pNtkG, _obj), myTypeName(pNtkG, _obj));
+                NtkNextLevelG.pop();
+            }
+            break;
+        }
+        else
+        {
+            cout << "no diff in this level." << endl;
+        }
+    }
+    cout << "totally complete." << endl;
+
+    // char *pFileNamesNew[4] = {NULL};
+    // pFileNamesNew[0] = pFileNames[0];
+    // pFileNamesNew[1] = pFileNames[1];
+    // pFileNamesNew[2] = pFileNames[4];
     //     Acb_IntallLibrary( Abc_FrameReadSignalNames() != NULL );
 
     //     if ( !Acb_NtkEcoPerform( pNtkF, pNtkG, pFileNames, nTimeout, 0, fInputs, fCheck, fVerbose, fVeryVerbose ) )

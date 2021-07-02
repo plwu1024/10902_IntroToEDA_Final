@@ -1,24 +1,15 @@
 
 module top(clk, a, b, op, oe, y, parity, overflow, greater, is_eq,
      less);
-  input clk, oe, a[0] , a[1] , a[2] , a[3] , a[4] , a[5] , a[6] ,
-    a[7] , b[0] , b[1] , b[2] , b[3] , b[4] , b[5] , b[6] , b[7] ,
-    op[0] , op[1];
-  // input clk, oe;
-  // input [7:0] a, b;
-  // input [1:0] op;
-  output y[0] , y[1] , y[2] , y[3] , y[4] , y[5] , y[6] , y[7] ,
-    parity, overflow, greater, is_eq, less;
-  // output [7:0] y;
-  // output parity, overflow, greater, is_eq, less;
+  input clk, oe;
+  input [7:0] a, b;
+  input [1:0] op;
+  output [7:0] y;
+  output parity, overflow, greater, is_eq, less;
   wire clk, oe;
-  wire a[0] , a[1] , a[2] , a[3] , a[4] , a[5] , a[6] ,
-    a[7] , b[0] , b[1] , b[2] , b[3] , b[4] , b[5] , b[6] , b[7] ,
-    op[0] , op[1];
-  wire y[0] , y[1] , y[2] , y[3] , y[4] , y[5] , y[6] , y[7];
-  // wire [7:0] a, b;
-  // wire [1:0] op;
-  // wire [7:0] y;
+  wire [7:0] a, b;
+  wire [1:0] op;
+  wire [7:0] y;
   wire parity, overflow, greater, is_eq, less;
   wire n_0, n_1, n_2, n_3, n_4, n_5, n_6, n_7;
   wire n_8, n_9, n_10, n_11, n_12, n_13, n_14, n_15;

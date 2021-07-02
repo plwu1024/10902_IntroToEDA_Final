@@ -44,6 +44,7 @@ module top(clk, a, b, op, oe, y, parity, overflow, greater, is_eq,
   wire n_833, n_834, n_835, n_836, n_837, n_838, n_839, n_840;
   wire n_841, n_842, n_843, n_844, n_845, n_846, n_849, n_850;
   wire n_851, n_852;
+  wire t_0, t_1, t_2, t_3, t_4, t_5, t_6, t_7;
   assign overflow = y[7];
   or g809 (n_505, wc, a[1]);
   not gc (wc, b[1]);
@@ -314,13 +315,13 @@ module top(clk, a, b, op, oe, y, parity, overflow, greater, is_eq,
   not gc72 (wc72, n_513);
   and g1687 (y[1], n_508, wc73);
   not gc73 (wc73, n_513);
-  and g1688 (y[6], n_501, wc74);
+  and g1688 (y[6], t_0, n_501, wc74);
   not gc74 (wc74, n_513);
-  and g1689 (y[4], n_488, wc75);
+  and g1689 (y[4], t_2, n_488, wc75);
   not gc75 (wc75, n_513);
-  and g1690 (y[3], n_492, wc76);
+  and g1690 (y[3], t_4, n_492, wc76);
   not gc76 (wc76, n_513);
-  and g1691 (y[0], n_495, wc77);
+  and g1691 (y[0], t_6, n_495, wc77);
   not gc77 (wc77, n_513);
 endmodule
 
