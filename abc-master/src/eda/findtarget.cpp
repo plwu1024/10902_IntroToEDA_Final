@@ -96,65 +96,8 @@ void myPrimeStructuralhashing(long long &prevhash, int type)
         break;
     }
 }
-void writeFile(ostream &os, Acb_Ntk_t *p){
-    os << "module top(";
-    int iObj, i;
-    bool first = true;
-    Acb_NtkForEachCi(p, iObj, i){
-        if (!first){ os << ", "; }
-        else{ first = false; }
-        os << Acb_ObjNameStr(p, iObj);
-    }
-    Acb_NtkForEachCo(p, iObj, i){
-        if (!first){ os << ", "; }
-        else{ first = false; }
-        os << Acb_ObjNameStr(p, iObj);
-    }
-    os << ");" << endl;
-
-    first = true;
-    os << "  input ";
-    Acb_NtkForEachCi(p, iObj, i){
-        if (!first){ os << ", "; }
-        else{ first = false; }
-        os << Acb_ObjNameStr(p, iObj);
-    }
-    os << ";" << endl;
-    first = true;
-    os << "  output ";
-    Acb_NtkForEachCo(p, iObj, i){
-        if (!first){ os << ", "; }
-        else{ first = false; }
-        os << Acb_ObjNameStr(p, iObj);
-    }
-    os << ";" << endl;
-
-    first = true;
-    os << "  wire ";
-    Acb_NtkForEachObj(p, iObj){
-        if (Acb_ObjType(p, iObj) == ABC_OPER_CI || Acb_ObjType(p, iObj) == ABC_OPER_CO){
-            continue;
-        }
-        if (!first){ os << ", "; }
-        else{ first = false; }
-        os << Acb_ObjNameStr(p, iObj);
-    }
-    os << ";" << endl;
-
-    Acb_NtkForEachObj(p, iObj){
-        if (Acb_ObjType(p, iObj) == ABC_OPER_CI || Acb_ObjType(p, iObj) == ABC_OPER_CO){
-            continue;
-        }
-        int fanin, k;
-        os << "  " << myTypeName(p, iObj) << " ga" << iObj << " (" << Acb_ObjNameStr(p, iObj);
-        Acb_ObjForEachFanin(p, iObj, fanin, k){
-            os << ", " << Acb_ObjNameStr(p, fanin);
-        }
-        os << ");" << endl;
-    }
-    os << "endmodule" << endl;
-}
-static inline void printObj(Acb_Ntk_t *p, int _obj, char *head = "Obj"){
+static inline void printObj(Acb_Ntk_t *p, int _obj, char *head = "Obj")
+{
     printf("%s: %5d, %10s, %s\n", head, _obj, Acb_ObjNameStr(p, _obj), myTypeName(p, _obj));
 }
 static inline void printLevelAll(Acb_Ntk_t *p, queue<int> _level, char *head = "Obj")
@@ -165,6 +108,132 @@ static inline void printLevelAll(Acb_Ntk_t *p, queue<int> _level, char *head = "
         _level.pop();
     }
     printf("\n");
+}
+void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_target)
+{
+    vector<bool> is_target;
+    int t_count = 0, t_max = to_put_target.size();
+    is_target.reserve(Acb_NtkObjNumMax(p));
+    for (int i = 0; i < Acb_NtkObjNumMax(p); i++)
+    {
+        is_target.push_back(false);
+    }
+    while (!to_put_target.empty())
+    {
+        is_target.at(to_put_target.front()) = true;
+        to_put_target.pop();
+    }
+    os << "module top(";
+    int iObj, i;
+    bool first = true;
+    Acb_NtkForEachCi(p, iObj, i)
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        else
+        {
+            first = false;
+        }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    Acb_NtkForEachCo(p, iObj, i)
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        else
+        {
+            first = false;
+        }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << ");" << endl;
+
+    first = true;
+    os << "  input ";
+    Acb_NtkForEachCi(p, iObj, i)
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        else
+        {
+            first = false;
+        }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << ";" << endl;
+    first = true;
+    os << "  output ";
+    Acb_NtkForEachCo(p, iObj, i)
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        else
+        {
+            first = false;
+        }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << ";" << endl;
+
+    first = true;
+    os << "  wire ";
+    Acb_NtkForEachObj(p, iObj)
+    {
+        if (Acb_ObjType(p, iObj) == ABC_OPER_CI || Acb_ObjType(p, iObj) == ABC_OPER_CO)
+        {
+            continue;
+        }
+        if (!first)
+        {
+            os << ", ";
+        }
+        else
+        {
+            first = false;
+        }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << ";" << endl;
+
+    os << "  wire ";
+    for (int i = 0; i < t_max; i++)
+    {
+        if (i)
+        {
+            os << ", ";
+        }
+        os << "t_" << i;
+    }
+
+    Acb_NtkForEachObj(p, iObj)
+    {
+        if (Acb_ObjType(p, iObj) == ABC_OPER_CI || Acb_ObjType(p, iObj) == ABC_OPER_CO)
+        {
+            continue;
+        }
+        int fanin, k;
+        os << "  " << myTypeName(p, iObj) << " ga" << iObj << " (" << Acb_ObjNameStr(p, iObj);
+        if (is_target.at(iObj))
+        {
+            os << ", t_" << t_count;
+            t_count++;
+            printObj(p, iObj, "Target");
+        }
+        Acb_ObjForEachFanin(p, iObj, fanin, k)
+        {
+            os << ", " << Acb_ObjNameStr(p, fanin);
+        }
+        os << ");" << endl;
+    }
+    os << "endmodule" << endl;
 }
 
 void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType);
@@ -406,26 +475,34 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
     // BFS with DFS and compair
     printf("\nBFS...\n");
     int ObjAmountF = Acb_NtkObjNum(pNtkF), ObjAmountG = Acb_NtkObjNum(pNtkG);
-    int NtkObjColorF[ObjAmountF], NtkObjColorG[ObjAmountG]; // traversed: 1
-    int NtkObjdF[ObjAmountF], NtkObjdG[ObjAmountG];         // root: 0
+    // int NtkObjColorF[ObjAmountF], NtkObjColorG[ObjAmountG]; // traversed: 1
+    // int NtkObjdF[ObjAmountF], NtkObjdG[ObjAmountG];         // root: 0
     long long ObjTypeHashF = 1, ObjTypeHashG = 1;
-    for (int i = 0; i < ObjAmountF; i++)
-    {
-        NtkObjColorF[i] = 0;
-        NtkObjdF[i] = 0;
-        NtkObjColorG[i] = 0;
-        NtkObjdG[i] = 0;
-    }
+    // for (int i = 0; i < ObjAmountF; i++)
+    // {
+    //     NtkObjColorF[i] = 0;
+    //     NtkObjdF[i] = 0;
+    //     NtkObjColorG[i] = 0;
+    //     NtkObjdG[i] = 0;
+    // }
     queue<int> NtkNextLevelF, NtkNextLevelG, NtkPrevLevelF, NtkPrevLevelG;
     Acb_NtkForEachCo(pNtkF, objF, iterF)
     {
-        NtkNextLevelF.push(objF);
-        NtkObjColorF[objF] ^= 1;
+        int fanin, k;
+        Acb_ObjForEachFanin(pNtkF, objF, fanin, k)
+        {
+            NtkNextLevelF.push(fanin);
+        }
+        // NtkObjColorF[objF] ^= 1;
     }
     Acb_NtkForEachCo(pNtkG, objG, iterG)
     {
-        NtkNextLevelG.push(objG);
-        NtkObjColorG[objG] ^= 1;
+        int fanin, k;
+        Acb_ObjForEachFanin(pNtkG, objG, fanin, k)
+        {
+            NtkNextLevelG.push(fanin);
+        }
+        // NtkObjColorG[objG] ^= 1;
     }
     while (!NtkNextLevelF.empty() && !NtkNextLevelG.empty())
     {
@@ -433,13 +510,16 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
         myGetNextLevel(pNtkG, NtkNextLevelG, NtkPrevLevelG, ObjTypeHashG, fVerbose);
         if (ObjTypeHashF != ObjTypeHashG)
         {
-            cout << "Difference detected.\n"
-                 << "F= " << ObjTypeHashF << endl
-                 << "G= " << ObjTypeHashG << endl;
-            printLevelAll(pNtkF, NtkNextLevelF, "ObjF_Next");
-            printLevelAll(pNtkG, NtkNextLevelG, "ObjG_Next");
-            // printLevelAll(pNtkF, NtkPrevLevelF, "ObjF_Prev");
-            // printLevelAll(pNtkG, NtkPrevLevelG, "ObjG_Prev");
+            if (fVerbose)
+            {
+                cout << "Difference detected.\n"
+                     << "F= " << ObjTypeHashF << endl
+                     << "G= " << ObjTypeHashG << endl;
+                printLevelAll(pNtkF, NtkNextLevelF, "ObjF_Next");
+                printLevelAll(pNtkG, NtkNextLevelG, "ObjG_Next");
+                printLevelAll(pNtkF, NtkPrevLevelF, "ObjF_Prev");
+                printLevelAll(pNtkG, NtkPrevLevelG, "ObjG_Prev");
+            }
             break;
         }
         else
@@ -448,7 +528,7 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
         }
     }
     fstream fout("temp_with_target.v", ios::out);
-    writeFile(fout, pNtkF);
+    writeFile(fout, pNtkG, NtkPrevLevelG);
 
     // char *pFileNamesNew[4] = {NULL};
     // pFileNamesNew[0] = pFileNames[0];

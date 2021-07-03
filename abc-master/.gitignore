@@ -60,7 +60,5 @@ tags
 /cmake
 /cscope
 
-temp1.aig
-temp2.aig
 temp*
 top*
