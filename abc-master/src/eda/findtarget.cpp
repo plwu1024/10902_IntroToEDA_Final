@@ -139,7 +139,7 @@ void writeFile(ostream &os, Acb_Ntk_t *p){
         else{ first = false; }
         os << Acb_ObjNameStr(p, iObj);
     }
-    os << endl;
+    os << ";" << endl;
 
     Acb_NtkForEachObj(p, iObj){
         if (Acb_ObjType(p, iObj) == ABC_OPER_CI || Acb_ObjType(p, iObj) == ABC_OPER_CO){
