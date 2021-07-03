@@ -8,7 +8,7 @@
 #include <queue>
 using namespace std;
 
-char *myTypeName(Acb_Ntk_t *p, int iObj)
+static inline char *myTypeName(Acb_Ntk_t *p, int iObj)
 {
     int type = Acb_ObjType(p, iObj);
     switch (type)
@@ -47,7 +47,7 @@ char *myTypeName(Acb_Ntk_t *p, int iObj)
         return "UNDEF";
     }
 }
-void printFanins(int level, Acb_Ntk_t *p, int iObj)
+static inline void printFanins(int level, Acb_Ntk_t *p, int iObj)
 {
     for (int i = 0; i < level; i++)
     {
@@ -60,7 +60,7 @@ void printFanins(int level, Acb_Ntk_t *p, int iObj)
         printFanins(level + 1, p, objk);
     }
 }
-void myPrimeStructuralhashing(long long &prevhash, int type)
+static inline void myPrimeStructuralhashing(long long &prevhash, int type)
 {
     switch (type)
     {
@@ -109,7 +109,7 @@ static inline void printLevelAll(Acb_Ntk_t *p, queue<int> _level, char *head = "
     }
     printf("\n");
 }
-void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_target)
+static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_target)
 {
     vector<bool> is_target;
     int t_count = 0, t_max = to_put_target.size();
@@ -203,7 +203,9 @@ void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_target)
     }
     os << ";" << endl;
 
-    os << "  wire ";
+    if (t_max){
+        os << "  wire ";
+    }
     for (int i = 0; i < t_max; i++)
     {
         if (i)
@@ -236,12 +238,12 @@ void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_target)
     os << "endmodule" << endl;
 }
 
-void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType);
-void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType);
-void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue);
-void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue);
+static inline void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType);
+static inline void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType);
+static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue);
+static inline void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue);
 
-void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = ABC_OPER_BIT_BUF)
+static inline void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = ABC_OPER_BIT_BUF)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -296,7 +298,7 @@ void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = 
         }
     }
 }
-void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = ABC_OPER_BIT_BUF)
+static inline void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = ABC_OPER_BIT_BUF)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -314,7 +316,7 @@ void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = 
         }
     }
 }
-void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -340,7 +342,7 @@ void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
         }
     }
 }
-void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+static inline void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -367,7 +369,7 @@ void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
     }
 }
 
-void myGetNextLevel(Acb_Ntk_t *pNtk, queue<int> &_fromLevel, queue<int> &_oldLevel, long long &_prevHash, int fVerbose = 0)
+static inline void myGetNextLevel(Acb_Ntk_t *pNtk, queue<int> &_fromLevel, queue<int> &_oldLevel, long long &_prevHash, int fVerbose = 0)
 {
     int _obj, _fanin, _k;
     queue<int> _tmpLevel;
@@ -473,8 +475,8 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
     // TODO
 
     // BFS with DFS and compair
-    printf("\nBFS...\n");
-    int ObjAmountF = Acb_NtkObjNum(pNtkF), ObjAmountG = Acb_NtkObjNum(pNtkG);
+    // printf("\nBFS...\n");
+    // int ObjAmountF = Acb_NtkObjNum(pNtkF), ObjAmountG = Acb_NtkObjNum(pNtkG);
     // int NtkObjColorF[ObjAmountF], NtkObjColorG[ObjAmountG]; // traversed: 1
     // int NtkObjdF[ObjAmountF], NtkObjdG[ObjAmountG];         // root: 0
     long long ObjTypeHashF = 1, ObjTypeHashG = 1;

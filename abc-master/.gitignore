@@ -62,3 +62,7 @@ tags
 
 temp*
 top*
+
+out.v
+patch.v
+.vscode
