@@ -4,6 +4,7 @@
 #include "base/main/mainInt.h"
 // #include "base/acb/acbFunc.c"
 #include <iostream>
+#include <fstream>
 #include <queue>
 using namespace std;
 
@@ -13,25 +14,25 @@ char *myTypeName(Acb_Ntk_t *p, int iObj)
     switch (type)
     {
     case ABC_OPER_BIT_BUF:
-        return "BUF";
+        return "buf";
     case ABC_OPER_BIT_INV:
-        return "INV";
+        return "not";
     case ABC_OPER_BIT_AND:
-        return "AND";
+        return "and";
     case ABC_OPER_BIT_NAND:
-        return "NAND";
+        return "nand";
     case ABC_OPER_BIT_OR:
-        return "OR";
+        return "or";
     case ABC_OPER_BIT_NOR:
-        return "NOR";
+        return "nor";
     case ABC_OPER_BIT_XOR:
-        return "XOR";
+        return "xor";
     case ABC_OPER_BIT_NXOR:
-        return "NXOR";
+        return "nxor";
     case ABC_OPER_CONST_F:
-        return "CONST0";
+        return "1'b0";
     case ABC_OPER_CONST_T:
-        return "CONST1";
+        return "1'b1";
     case ABC_OPER_NONE:
         return "UNUSED";
     case ABC_OPER_PI:
@@ -95,7 +96,64 @@ void myPrimeStructuralhashing(long long &prevhash, int type)
         break;
     }
 }
-// void writeFile(){}
+void writeFile(ostream &os, Acb_Ntk_t *p){
+    os << "module top(";
+    int iObj, i;
+    bool first = true;
+    Acb_NtkForEachCi(p, iObj, i){
+        if (!first){ os << ", "; }
+        else{ first = false; }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    Acb_NtkForEachCo(p, iObj, i){
+        if (!first){ os << ", "; }
+        else{ first = false; }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << ");" << endl;
+
+    first = true;
+    os << "  input ";
+    Acb_NtkForEachCi(p, iObj, i){
+        if (!first){ os << ", "; }
+        else{ first = false; }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << ";" << endl;
+    first = true;
+    os << "  output ";
+    Acb_NtkForEachCo(p, iObj, i){
+        if (!first){ os << ", "; }
+        else{ first = false; }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << ";" << endl;
+
+    first = true;
+    os << "  wire ";
+    Acb_NtkForEachObj(p, iObj){
+        if (Acb_ObjType(p, iObj) == ABC_OPER_CI || Acb_ObjType(p, iObj) == ABC_OPER_CO){
+            continue;
+        }
+        if (!first){ os << ", "; }
+        else{ first = false; }
+        os << Acb_ObjNameStr(p, iObj);
+    }
+    os << endl;
+
+    Acb_NtkForEachObj(p, iObj){
+        if (Acb_ObjType(p, iObj) == ABC_OPER_CI || Acb_ObjType(p, iObj) == ABC_OPER_CO){
+            continue;
+        }
+        int fanin, k;
+        os << "  " << myTypeName(p, iObj) << " ga" << iObj << " (" << Acb_ObjNameStr(p, iObj);
+        Acb_ObjForEachFanin(p, iObj, fanin, k){
+            os << ", " << Acb_ObjNameStr(p, fanin);
+        }
+        os << ");" << endl;
+    }
+    os << "endmodule" << endl;
+}
 static inline void printObj(Acb_Ntk_t *p, int _obj, char *head = "Obj"){
     printf("%s: %5d, %10s, %s\n", head, _obj, Acb_ObjNameStr(p, _obj), myTypeName(p, _obj));
 }
@@ -380,8 +438,8 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
                  << "G= " << ObjTypeHashG << endl;
             printLevelAll(pNtkF, NtkNextLevelF, "ObjF_Next");
             printLevelAll(pNtkG, NtkNextLevelG, "ObjG_Next");
-            printLevelAll(pNtkF, NtkPrevLevelF, "ObjF_Prev");
-            printLevelAll(pNtkG, NtkPrevLevelG, "ObjG_Prev");
+            // printLevelAll(pNtkF, NtkPrevLevelF, "ObjF_Prev");
+            // printLevelAll(pNtkG, NtkPrevLevelG, "ObjG_Prev");
             break;
         }
         else
@@ -389,6 +447,8 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
             cout << "no diff in this level." << endl;
         }
     }
+    fstream fout("temp_with_target.v", ios::out);
+    writeFile(fout, pNtkF);
 
     // char *pFileNamesNew[4] = {NULL};
     // pFileNamesNew[0] = pFileNames[0];
