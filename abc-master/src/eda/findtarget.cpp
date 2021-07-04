@@ -60,9 +60,44 @@ static inline void printFanins(int level, Acb_Ntk_t *p, int iObj)
         printFanins(level + 1, p, objk);
     }
 }
-static inline void myPrimeStructuralhashing(long long &prevhash, int type)
-{
-    switch (type)
+// static inline void myPrimeStructuralhashing(long long &prevhash, int type)
+// {
+//     switch (type)
+//     {
+//     case ABC_OPER_BIT_BUF:
+//         prevhash *= 2;
+//         break;
+//     case ABC_OPER_BIT_INV:
+//         prevhash *= 3;
+//         break;
+//     case ABC_OPER_BIT_AND:
+//         prevhash *= 5;
+//         break;
+//     case ABC_OPER_BIT_NAND:
+//         prevhash *= 7;
+//         break;
+//     case ABC_OPER_BIT_OR:
+//         prevhash *= 11;
+//         break;
+//     case ABC_OPER_BIT_NOR:
+//         prevhash *= 13;
+//         break;
+//     case ABC_OPER_BIT_XOR:
+//         prevhash *= 17;
+//         break;
+//     case ABC_OPER_BIT_NXOR:
+//         prevhash *= 19;
+//         break;
+//     case ABC_OPER_CONST_F:
+//         prevhash *= 23;
+//         break;
+//     case ABC_OPER_CONST_T:
+//         prevhash *= 29;
+//         break;
+//     }
+// }
+static inline void myPrimeStructuralhashing(long long &prevhash, Acb_Ntk_t *p, int _obj){
+    switch (Acb_ObjType(p, _obj))
     {
     case ABC_OPER_BIT_BUF:
         prevhash *= 2;
@@ -94,7 +129,13 @@ static inline void myPrimeStructuralhashing(long long &prevhash, int type)
     case ABC_OPER_CONST_T:
         prevhash *= 29;
         break;
+    case ABC_OPER_CI:
+        prevhash *= _obj;
+        break;
+    default:
+        break;
     }
+
 }
 static inline void printObj(Acb_Ntk_t *p, int _obj, char *head = "Obj")
 {
@@ -111,18 +152,27 @@ static inline void printLevelAll(Acb_Ntk_t *p, queue<int> _level, char *head = "
 }
 static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_target)
 {
-    vector<bool> is_target, is_overwrite_by_Co;
-    int t_count = 0, t_max = to_put_target.size();
+    vector<bool> is_target, is_overwrite_by_Co, is_fanout_of_Ci;
+    int t_count = 0, t_max = to_put_target.size()+Acb_NtkCiNum(p);
     int iObj, i, fanin, k;
+    vector<int> Ci_to_target;
     bool first = true;
     is_target.reserve(Acb_NtkObjNumMax(p));
     is_overwrite_by_Co.reserve(Acb_NtkObjNumMax(p));
+    is_fanout_of_Ci.reserve(Acb_NtkObjNumMax(p));
+    Ci_to_target.reserve(Acb_NtkObjNumMax(p));
 
     for (int i = 0; i < Acb_NtkObjNumMax(p); i++)
     {
         is_target.push_back(false);
         is_overwrite_by_Co.push_back(false);
+        is_fanout_of_Ci.push_back(false);
+        Ci_to_target.push_back(-1);
     }
+    Acb_NtkForEachCi(p, iObj, i){
+            Ci_to_target.at(iObj) = t_count;
+            t_count++;
+        }
     while (!to_put_target.empty())
     {
         is_target.at(to_put_target.front()) = true;
@@ -133,6 +183,11 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
         }
         to_put_target.pop();
     }
+    // Acb_NtkForEachCi(p, iObj, i){
+    //     Acb_ObjForEachFanout(p, iObj, fanin, k){
+    //         is_fanout_of_Ci
+    //     }
+    // }
 
     os << "module top(";
     Acb_NtkForEachCi(p, iObj, i)
@@ -244,7 +299,12 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
         }
         Acb_ObjForEachFanin(p, iObj, fanin, k)
         {
-            os << ", " << Acb_ObjNameStr(p, fanin);
+            if (Ci_to_target.at(fanin) != -1){
+                os << ", " << "t_" << Ci_to_target.at(fanin);
+            }
+            else{
+                os << ", " << Acb_ObjNameStr(p, fanin);
+            }
         }
         os << ");" << endl;
     }
@@ -259,12 +319,12 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
     os << "endmodule" << endl;
 }
 
-static inline void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType);
-static inline void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType);
-static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue);
-static inline void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue);
+static inline void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash, int prevType);
+static inline void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash, int prevType);
+static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash);
+static inline void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash);
 
-static inline void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = ABC_OPER_BIT_BUF)
+static inline void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash, int prevType = ABC_OPER_BIT_BUF)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -279,47 +339,51 @@ static inline void DFS_buf(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, i
                 switch (Acb_ObjType(p, objm))
                 {
                 case ABC_OPER_BIT_INV:
-                    DFS_buf(p, objm, put_into_queue, prevType);
+                    DFS_buf(p, objm, put_into_queue, gateHash, prevType);
                     break;
                 case ABC_OPER_BIT_BUF:
-                    DFS_inv(p, objm, put_into_queue, prevType);
+                    DFS_inv(p, objm, put_into_queue, gateHash, prevType);
                     break;
                 default:
                     put_into_queue.push(objm);
+                    myPrimeStructuralhashing(gateHash, p, objm);
                     break;
                 }
             }
         }
         case ABC_OPER_BIT_BUF:
-            DFS_buf(p, objk, put_into_queue);
+            DFS_buf(p, objk, put_into_queue, gateHash);
             break;
         case ABC_OPER_BIT_AND:
             if (prevType == ABC_OPER_BIT_AND || prevType == ABC_OPER_BIT_NAND)
             {
-                DFS_and(p, objk, put_into_queue);
+                DFS_and(p, objk, put_into_queue, gateHash);
             }
             else
             {
                 put_into_queue.push(objk);
+                myPrimeStructuralhashing(gateHash, p, objk);
             }
             break;
         case ABC_OPER_BIT_OR:
             if (prevType == ABC_OPER_BIT_OR || prevType == ABC_OPER_BIT_NOR)
             {
-                DFS_or(p, objk, put_into_queue);
+                DFS_or(p, objk, put_into_queue, gateHash);
             }
             else
             {
                 put_into_queue.push(objk);
+                myPrimeStructuralhashing(gateHash, p, objk);
             }
             break;
         default:
             put_into_queue.push(objk);
+            myPrimeStructuralhashing(gateHash, p, objk);
             break;
         }
     }
 }
-static inline void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, int prevType = ABC_OPER_BIT_BUF)
+static inline void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash, int prevType = ABC_OPER_BIT_BUF)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -327,17 +391,17 @@ static inline void DFS_inv(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, i
         switch (Acb_ObjType(p, objk))
         {
         case ABC_OPER_BIT_INV:
-            DFS_buf(p, objk, put_into_queue, prevType);
+            DFS_buf(p, objk, put_into_queue, gateHash, prevType);
             break;
         case ABC_OPER_BIT_BUF:
-            DFS_inv(p, objk, put_into_queue, prevType);
+            DFS_inv(p, objk, put_into_queue, gateHash, prevType);
             break;
         default:
             put_into_queue.push(objk);
         }
     }
 }
-static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -349,13 +413,13 @@ static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
             int objm, m;
             Acb_ObjForEachFanin(p, objk, objm, m)
             {
-                DFS_inv(p, objm, put_into_queue, ABC_OPER_BIT_AND);
+                DFS_inv(p, objm, put_into_queue, gateHash, ABC_OPER_BIT_AND);
             }
             break;
         }
         case ABC_OPER_BIT_AND:
         case ABC_OPER_BIT_BUF:
-            DFS_and(p, objk, put_into_queue);
+            DFS_and(p, objk, put_into_queue, gateHash);
             break;
         default:
             put_into_queue.push(objk);
@@ -363,7 +427,7 @@ static inline void DFS_and(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
         }
     }
 }
-static inline void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
+static inline void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue, long long &gateHash)
 {
     int objk, k;
     Acb_ObjForEachFanin(p, iObj, objk, k)
@@ -375,13 +439,13 @@ static inline void DFS_or(Acb_Ntk_t *p, int iObj, queue<int> &put_into_queue)
             int objm, m;
             Acb_ObjForEachFanin(p, objk, objm, m)
             {
-                DFS_inv(p, objm, put_into_queue, ABC_OPER_BIT_OR);
+                DFS_inv(p, objm, put_into_queue, gateHash, ABC_OPER_BIT_OR);
             }
             break;
         }
         case ABC_OPER_BIT_OR:
         case ABC_OPER_BIT_BUF:
-            DFS_or(p, objk, put_into_queue);
+            DFS_or(p, objk, put_into_queue, gateHash);
             break;
         default:
             put_into_queue.push(objk);
@@ -395,23 +459,27 @@ static inline void myGetNextLevel(Acb_Ntk_t *pNtk, queue<int> &_fromLevel, queue
     int _obj, _fanin, _k;
     queue<int> _tmpLevel;
     _oldLevel = _fromLevel;
+    long long gateHash = 1;
+
     while (!_fromLevel.empty())
     {
         _obj = _fromLevel.front();
-        if (fVerbose)
-        {
-            // printf("Obj: %5d, %5s, type= %s\n", _obj, Acb_ObjNameStr(pNtk, _obj), myTypeName(pNtk, _obj));
-            printObj(pNtk, _obj);
-        }
+        gateHash = 1;
+        myPrimeStructuralhashing(gateHash, pNtk, _fromLevel.front());
+        // if (fVerbose)
+        // {
+        //     // printf("Obj: %5d, %5s, type= %s\n", _obj, Acb_ObjNameStr(pNtk, _obj), myTypeName(pNtk, _obj));
+        //     printObj(pNtk, _obj);
+        // }
         switch (Acb_ObjType(pNtk, _fromLevel.front()))
         {
         case ABC_OPER_BIT_AND:
         case ABC_OPER_BIT_NAND:
-            DFS_and(pNtk, _fromLevel.front(), _tmpLevel);
+            DFS_and(pNtk, _fromLevel.front(), _tmpLevel, gateHash);
             break;
         case ABC_OPER_BIT_OR:
         case ABC_OPER_BIT_NOR:
-            DFS_or(pNtk, _fromLevel.front(), _tmpLevel);
+            DFS_or(pNtk, _fromLevel.front(), _tmpLevel, gateHash);
             break;
         // case ABC_OPER_BIT_INV:
         //     DFS_inv(pNtk, _fromLevel.front(), _tmpLevel)
@@ -421,13 +489,14 @@ static inline void myGetNextLevel(Acb_Ntk_t *pNtk, queue<int> &_fromLevel, queue
                 switch (Acb_ObjType(pNtk, _fanin))
                 {
                 case ABC_OPER_BIT_BUF:
-                    DFS_buf(pNtk, _fromLevel.front(), _tmpLevel);
+                    DFS_buf(pNtk, _fromLevel.front(), _tmpLevel, gateHash);
                     break;
                 case ABC_OPER_BIT_INV:
-                    DFS_inv(pNtk, _fromLevel.front(), _tmpLevel);
+                    DFS_inv(pNtk, _fromLevel.front(), _tmpLevel, gateHash);
                     break;
                 default:
                     _tmpLevel.push(_fanin);
+                    myPrimeStructuralhashing(gateHash, pNtk, _fanin);
                 }
             }
             break;
@@ -435,12 +504,14 @@ static inline void myGetNextLevel(Acb_Ntk_t *pNtk, queue<int> &_fromLevel, queue
         // Acb_ObjForEachFanin(pNtkF, _fromLevel.front(), fanin, k){
         //     myPrimeStructuralhashing(ObjTypeHashF, Acb_ObjType(pNtkF, fanin));
         // }
+        gateHash--;
+        _prevHash *= gateHash;
         _fromLevel.pop();
     }
     while (!_tmpLevel.empty())
     {
         _fromLevel.push(_tmpLevel.front());
-        myPrimeStructuralhashing(_prevHash, Acb_ObjType(pNtk, _tmpLevel.front()));
+        // myPrimeStructuralhashing(_prevHash, pNtk, _tmpLevel.front());
         _tmpLevel.pop();
     }
 }
@@ -531,6 +602,12 @@ void Eda_NtkRunFindTarget(char *pFileNames[5], int nTimeout, int fCheck, int fRa
     {
         myGetNextLevel(pNtkF, NtkNextLevelF, NtkPrevLevelF, ObjTypeHashF, fVerbose);
         myGetNextLevel(pNtkG, NtkNextLevelG, NtkPrevLevelG, ObjTypeHashG, fVerbose);
+        if (fVerbose){
+            printLevelAll(pNtkF, NtkNextLevelF, "ObjF_Next");
+            printLevelAll(pNtkG, NtkNextLevelG, "ObjG_Next");
+            printLevelAll(pNtkF, NtkPrevLevelF, "ObjF_Prev");
+            printLevelAll(pNtkG, NtkPrevLevelG, "ObjG_Prev");
+        }
         if (ObjTypeHashF != ObjTypeHashG)
         {
             if (fVerbose)
@@ -538,10 +615,6 @@ void Eda_NtkRunFindTarget(char *pFileNames[5], int nTimeout, int fCheck, int fRa
                 cout << "Difference detected.\n"
                      << "F= " << ObjTypeHashF << endl
                      << "G= " << ObjTypeHashG << endl;
-                printLevelAll(pNtkF, NtkNextLevelF, "ObjF_Next");
-                printLevelAll(pNtkG, NtkNextLevelG, "ObjG_Next");
-                printLevelAll(pNtkF, NtkPrevLevelF, "ObjF_Prev");
-                printLevelAll(pNtkG, NtkPrevLevelG, "ObjG_Prev");
             }
             break;
         }

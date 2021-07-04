@@ -1,0 +1,2 @@
+runfindtarget -v tests/tim3/g1.v tests/tim3/r2.v tests/tim3/g1_t.v
+runeco tests/tim3/g1_t.v tests/tim3/r2.v
