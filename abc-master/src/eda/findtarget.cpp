@@ -214,6 +214,7 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
         }
         os << "t_" << i;
     }
+    os << ";" << endl;
 
     Acb_NtkForEachObj(p, iObj)
     {
@@ -227,7 +228,7 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
         {
             os << ", t_" << t_count;
             t_count++;
-            printObj(p, iObj, "Target");
+            // printObj(p, iObj, "Target");
         }
         Acb_ObjForEachFanin(p, iObj, fanin, k)
         {
@@ -424,13 +425,13 @@ static inline void myGetNextLevel(Acb_Ntk_t *pNtk, queue<int> &_fromLevel, queue
     }
 }
 
-void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRandom, int fInputs, int fVerbose, int fVeryVerbose)
+void Eda_NtkRunFindTarget(char *pFileNames[5], int nTimeout, int fCheck, int fRandom, int fInputs, int fVerbose, int fVeryVerbose)
 {
     extern Acb_Ntk_t *Acb_VerilogSimpleRead(char *pFileName, char *pFileNameW);
-    extern void Acb_NtkRunEco(char *pFileNames[4], int nTimeout, int fCheck, int fRandom, int fInputs, int fVerbose, int fVeryVerbose);
-    char Command[1000];
-    int Result = 1;
-    Acb_Ntk_t *pNtkF = Acb_VerilogSimpleRead(pFileNames[0], pFileNames[4]);
+    // extern void Acb_NtkRunEco(char *pFileNames[4], int nTimeout, int fCheck, int fRandom, int fInputs, int fVerbose, int fVeryVerbose);
+    // char Command[1000];
+    // int Result = 1;
+    Acb_Ntk_t *pNtkF = Acb_VerilogSimpleRead(pFileNames[0], pFileNames[3]);
     Acb_Ntk_t *pNtkG = Acb_VerilogSimpleRead(pFileNames[1], NULL);
     if (!pNtkF || !pNtkG)
         return;
@@ -449,7 +450,7 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
     assert(Acb_NtkCiNum(pNtkF) == Acb_NtkCiNum(pNtkG));
     assert(Acb_NtkCoNum(pNtkF) == Acb_NtkCoNum(pNtkG));
 
-    printf("trying to find target ...\n");
+    printf("Finding target ...\n");
     int iterF, iterG, objF, objG;
     if (fVeryVerbose)
     {
@@ -529,8 +530,16 @@ void Eda_NtkRunFindTarget(char *pFileNames[6], int nTimeout, int fCheck, int fRa
             cout << "no diff in this level." << endl;
         }
     }
-    fstream fout("temp_with_target.v", ios::out);
-    writeFile(fout, pNtkG, NtkPrevLevelG);
+    fstream fout;
+    if (pFileNames[2] != NULL){
+        cout << "Writing target to " << pFileNames[2] << endl;
+        fout.open(pFileNames[2], ios::out);
+    }
+    else{
+        cout << "can't write " << pFileNames[2] << ", write to temp_with_target.v" << endl;
+        fout.open("temp_with_target.v", ios::out);
+    }
+    writeFile(fout, pNtkF, NtkPrevLevelF);
 
     // char *pFileNamesNew[4] = {NULL};
     // pFileNamesNew[0] = pFileNames[0];

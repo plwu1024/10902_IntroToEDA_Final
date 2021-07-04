@@ -47,31 +47,31 @@ int Eda_CommandHello(Abc_Frame_t *pAbc, int argc, char **argv)
     return 0;
 
 usage:
-    Abc_Print( -2, "usage: hello [-vh]\n" );
-    Abc_Print( -2, "\t         say hello!\n");
-    Abc_Print( -2, "\t-v     : toggle printing verbose information [default = %s]\n", fVerbose? "yes": "no" );
-    Abc_Print( -2, "\t-h     : print the command usage\n");
+    Abc_Print(-2, "usage: hello [-vh]\n");
+    Abc_Print(-2, "\t         say hello!\n");
+    Abc_Print(-2, "\t-v     : toggle printing verbose information [default = %s]\n", fVerbose ? "yes" : "no");
+    Abc_Print(-2, "\t-h     : print the command usage\n");
     return 1;
 }
 
 int Eda_CommandRunFindTarget(Abc_Frame_t *pAbc, int argc, char **argv)
 {
-    char * pFileNames[6] = {NULL};
+    char *pFileNames[5] = {NULL};
     int c, nTimeout = 0, fCheck = 0, fRandom = 0, fInputs = 0, fVerbose = 0, fVeryVerbose = 0;
     Extra_UtilGetoptReset();
-    while ( ( c = Extra_UtilGetopt( argc, argv, "Tcrivwh" ) ) != EOF )
+    while ((c = Extra_UtilGetopt(argc, argv, "Tcrivwh")) != EOF)
     {
-        switch ( c )
+        switch (c)
         {
         case 'T':
-            if ( globalUtilOptind >= argc )
+            if (globalUtilOptind >= argc)
             {
-                Abc_Print( -1, "Command line switch \"-T\" should be followed by an integer.\n" );
+                Abc_Print(-1, "Command line switch \"-T\" should be followed by an integer.\n");
                 goto usage;
             }
             nTimeout = atoi(argv[globalUtilOptind]);
             globalUtilOptind++;
-            if ( nTimeout < 0 )
+            if (nTimeout < 0)
                 goto usage;
             break;
         case 'c':
@@ -95,52 +95,57 @@ int Eda_CommandRunFindTarget(Abc_Frame_t *pAbc, int argc, char **argv)
             goto usage;
         }
     }
-//    pArgvNew = argv + globalUtilOptind;
-//    nArgcNew = argc - globalUtilOptind;
-    if ( argc - globalUtilOptind < 4 || argc - globalUtilOptind > 5 )
+    //    pArgvNew = argv + globalUtilOptind;
+    //    nArgcNew = argc - globalUtilOptind;
+    if (argc - globalUtilOptind < 3 || argc - globalUtilOptind > 4)
     {
-        Abc_Print( 1, "Expecting 4~5 file names on the command line.\n" );
+        Abc_Print(1, "Expecting 3~4 file names on the command line.\n");
         goto usage;
     }
-    for ( c = 0; c < 2; c++ )
+    for (c = 0; c < 2; c++)
     {
-        FILE * pFile = fopen( argv[globalUtilOptind+c], "rb" );
-        if ( pFile == NULL )
+        FILE *pFile = fopen(argv[globalUtilOptind + c], "rb");
+        if (pFile == NULL)
         {
-            printf( "Cannot open input file \"%s\".\n", argv[globalUtilOptind+c] );
             return 0;
         }
         else
-            fclose( pFile );
-        pFileNames[c] = argv[globalUtilOptind+c];
+        {
+            // printf("Can open input file \"%s\".\n", argv[globalUtilOptind + c]);
+            fclose(pFile);
+        }
+        pFileNames[c] = argv[globalUtilOptind + c];
     }
-    for ( c = 4; c < argc - globalUtilOptind; c++ )
+    pFileNames[2] = argv[globalUtilOptind + 2];
+    for (c = 3; c < argc - globalUtilOptind; c++)
     {
-        FILE * pFile = fopen( argv[globalUtilOptind+c], "rb" );
-        if ( pFile == NULL )
+        FILE *pFile = fopen(argv[globalUtilOptind + c], "rb");
+        if (pFile == NULL)
         {
-            printf( "Cannot open input file \"%s\".\n", argv[globalUtilOptind+c] );
+            printf("Cannot open input file \"%s\".\n", argv[globalUtilOptind + c]);
             return 0;
         }
         else
-            fclose( pFile );
-        pFileNames[c] = argv[globalUtilOptind+c];
+        {
+            fclose(pFile);
+        }
+        pFileNames[c] = argv[globalUtilOptind + c];
     }
 
-    Eda_NtkRunFindTarget( pFileNames, nTimeout, fCheck, fRandom, fInputs, fVerbose, fVeryVerbose );
+    Eda_NtkRunFindTarget(pFileNames, nTimeout, fCheck, fRandom, fInputs, fVerbose, fVeryVerbose);
     return 0;
 
 usage:
-    Abc_Print( -2, "usage: runfindtarget [-T num] [-crivwh] <implementation> <specification> <imple_ta> <spec_ta> <weights>\n" );
-    Abc_Print( -2, "\t         try to find target and solve the eco problem. for example:\n");
-    Abc_Print( -2, "\t         \"runfindtarget unit1/F.v unit1/G.v unit1/F_t.v unit/G_t.v unit1/weight.txt; cec -n out.v unit1/G.v\")\n" );
-    Abc_Print( -2, "\t-T num : the timeout in seconds [default = %d]\n", nTimeout );
-    Abc_Print( -2, "\t-c     : toggle checking that the problem has a solution [default = %s]\n", fCheck? "yes": "no" );
-    Abc_Print( -2, "\t-r     : toggle using random permutation of support variables [default = %s]\n", fRandom? "yes": "no" );
-    Abc_Print( -2, "\t-i     : toggle using primary inputs as support variables [default = %s]\n", fInputs? "yes": "no" );
-    Abc_Print( -2, "\t-v     : toggle printing verbose information [default = %s]\n", fVerbose? "yes": "no" );
-    Abc_Print( -2, "\t-w     : toggle printing more verbose information [default = %s]\n", fVeryVerbose? "yes": "no" );
-    Abc_Print( -2, "\t-h     : print the command usage\n");
+    Abc_Print(-2, "usage: runfindtarget [-T num] [-crivwh] <implementation> <specification> <imple_ta> <weights>\n");
+    Abc_Print(-2, "\t         try to find target and solve the eco problem. for example:\n");
+    Abc_Print(-2, "\t         \"runfindtarget unit1/F.v unit1/G.v unit1/F_t.v unit/G_t.v unit1/weight.txt; cec -n out.v unit1/G.v\")\n");
+    Abc_Print(-2, "\t-T num : the timeout in seconds [default = %d]\n", nTimeout);
+    Abc_Print(-2, "\t-c     : toggle checking that the problem has a solution [default = %s]\n", fCheck ? "yes" : "no");
+    Abc_Print(-2, "\t-r     : toggle using random permutation of support variables [default = %s]\n", fRandom ? "yes" : "no");
+    Abc_Print(-2, "\t-i     : toggle using primary inputs as support variables [default = %s]\n", fInputs ? "yes" : "no");
+    Abc_Print(-2, "\t-v     : toggle printing verbose information [default = %s]\n", fVerbose ? "yes" : "no");
+    Abc_Print(-2, "\t-w     : toggle printing more verbose information [default = %s]\n", fVeryVerbose ? "yes" : "no");
+    Abc_Print(-2, "\t-h     : print the command usage\n");
     return 1;
 }
 
