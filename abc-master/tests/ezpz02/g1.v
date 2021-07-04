@@ -1,6 +1,6 @@
-module top(o, a, b, c, d, e, f, g, h, i, j);
+module top(o, a, b, c, d, e, f, g, h, i, j, k, l);
 output o;
-input a, b, c, d, e, f, g, h, i, j;
+input a, b, c, d, e, f, g, h, i, j, k, l;
 wire w1, w2, w3, w4, w5, w6, w7, w8, w9, w10;
 wire w11, w12, w13, w14, w15, w16, w17, w18, w19, w20;
 wire w21, w22;

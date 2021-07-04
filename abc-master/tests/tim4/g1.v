@@ -9,4 +9,5 @@ nand g4(n4, g, h);
 nand g5(n5, n1, n2);
 nand g6(n6, n3, n4);
 nand g7(n7, n5, n6);
+assign o = n7;
 endmodule

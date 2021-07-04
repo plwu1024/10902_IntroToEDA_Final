@@ -9,4 +9,5 @@ and g4(n4, g, h);
 and g5(n5, n1, n2);
 and g6(n6, n3, n4);
 and g7(n7, n5, n6);
+buf g8(o, n7);
 endmodule

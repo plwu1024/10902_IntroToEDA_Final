@@ -1,2 +1,2 @@
-runfindtarget -v testcases/test2/g1.v testcases/test2/r2.v testcases/test1/g1_t.v testcases/test1/r2_t.v
-runeco temp_with_target.v testcases/test2/r2.v
+runfindtarget g1.v r2.v g1_t.v
+runeco g1_t.v r2.v
