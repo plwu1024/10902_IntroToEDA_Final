@@ -1,16 +1,26 @@
 
 module top(clk, a, b, op, oe, y, parity, overflow, greater, is_eq,
      less);
-  input clk, oe;
-  input [7:0] a, b;
-  input [1:0] op;
-  output [7:0] y;
-  output parity, overflow, greater, is_eq, less;
+  input clk, oe, a[0] , a[1] , a[2] , a[3] , a[4] , a[5] , a[6] ,
+    a[7] , b[0] , b[1] , b[2] , b[3] , b[4] , b[5] , b[6] , b[7] ,
+    op[0] , op[1];
+  output y[0] , y[1] , y[2] , y[3] , y[4] , y[5] , y[6] , y[7] ,
+    parity, overflow, greater, is_eq, less;
   wire clk, oe;
-  wire [7:0] a, b;
-  wire [1:0] op;
-  wire [7:0] y;
-  wire parity, overflow, greater, is_eq, less;
+  wire a[0] , a[1] , a[2] , a[3] , a[4] , a[5] , a[6] ,
+    a[7] , b[0] , b[1] , b[2] , b[3] , b[4] , b[5] , b[6] , b[7] ,
+    op[0] , op[1];
+  wire y[0] , y[1] , y[2] , y[3] , y[4] , y[5] , y[6] , y[7];
+  // input clk, oe;
+  // input [7:0] a, b;
+  // input [1:0] op;
+  // output [7:0] y;
+  // output parity, overflow, greater, is_eq, less;
+  // wire clk, oe;
+  // wire [7:0] a, b;
+  // wire [1:0] op;
+  // wire [7:0] y;
+  // wire parity, overflow, greater, is_eq, less;
   wire n_41, n_47, n_56, n_64, n_69, n_140, n_143, n_144;
   wire n_185, n_190, n_191, n_192, n_193, n_194, n_195, n_264;
   wire n_339, n_360, n_369, n_410, n_413, n_445, n_446, n_450;
