@@ -128,7 +128,7 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
         is_target.at(to_put_target.front()) = true;
         if (Acb_ObjType(p, to_put_target.front()) == ABC_OPER_CO){
             Acb_ObjForEachFanin(p, to_put_target.front(), fanin, k){
-                is_overwrite_by_Co.at(fanin) = false;
+                is_overwrite_by_Co.at(fanin) = true;
             }
         }
         to_put_target.pop();
