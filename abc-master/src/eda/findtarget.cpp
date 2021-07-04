@@ -111,21 +111,30 @@ static inline void printLevelAll(Acb_Ntk_t *p, queue<int> _level, char *head = "
 }
 static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_target)
 {
-    vector<bool> is_target;
+    vector<bool> is_target, is_overwrite_by_Co;
     int t_count = 0, t_max = to_put_target.size();
+    int iObj, i, fanin, k;
+    bool first = true;
     is_target.reserve(Acb_NtkObjNumMax(p));
+    is_overwrite_by_Co.reserve(Acb_NtkObjNumMax(p));
+
     for (int i = 0; i < Acb_NtkObjNumMax(p); i++)
     {
         is_target.push_back(false);
+        is_overwrite_by_Co.push_back(false);
     }
     while (!to_put_target.empty())
     {
         is_target.at(to_put_target.front()) = true;
+        if (Acb_ObjType(p, to_put_target.front()) == ABC_OPER_CO){
+            Acb_ObjForEachFanin(p, to_put_target.front(), fanin, k){
+                is_overwrite_by_Co.at(fanin) = false;
+            }
+        }
         to_put_target.pop();
     }
+
     os << "module top(";
-    int iObj, i;
-    bool first = true;
     Acb_NtkForEachCi(p, iObj, i)
     {
         if (!first)
@@ -222,6 +231,9 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
         {
             continue;
         }
+        if (is_overwrite_by_Co.at(iObj)){
+            continue;
+        }
         int fanin, k;
         os << "  " << myTypeName(p, iObj) << " ga" << iObj << " (" << Acb_ObjNameStr(p, iObj);
         if (is_target.at(iObj))
@@ -235,6 +247,14 @@ static inline void writeFile(ostream &os, Acb_Ntk_t *p, queue<int> &to_put_targe
             os << ", " << Acb_ObjNameStr(p, fanin);
         }
         os << ");" << endl;
+    }
+
+    Acb_NtkForEachCo(p, iObj, i){
+        if (is_target.at(iObj)){
+            os << "  buf ga" << iObj << " (" << Acb_ObjNameStr(p, iObj) << ", t_" << t_count << ");" << endl;
+            t_count++;
+            // printObj(p, iObj, "Target");
+        }
     }
     os << "endmodule" << endl;
 }
@@ -491,21 +511,21 @@ void Eda_NtkRunFindTarget(char *pFileNames[5], int nTimeout, int fCheck, int fRa
     queue<int> NtkNextLevelF, NtkNextLevelG, NtkPrevLevelF, NtkPrevLevelG;
     Acb_NtkForEachCo(pNtkF, objF, iterF)
     {
-        int fanin, k;
-        Acb_ObjForEachFanin(pNtkF, objF, fanin, k)
-        {
-            NtkNextLevelF.push(fanin);
-        }
-        // NtkObjColorF[objF] ^= 1;
+        // int fanin, k;
+        // Acb_ObjForEachFanin(pNtkF, objF, fanin, k)
+        // {
+        //     NtkNextLevelF.push(fanin);
+        // }
+        NtkNextLevelF.push(objF);
     }
     Acb_NtkForEachCo(pNtkG, objG, iterG)
     {
-        int fanin, k;
-        Acb_ObjForEachFanin(pNtkG, objG, fanin, k)
-        {
-            NtkNextLevelG.push(fanin);
-        }
-        // NtkObjColorG[objG] ^= 1;
+        // int fanin, k;
+        // Acb_ObjForEachFanin(pNtkG, objG, fanin, k)
+        // {
+        //     NtkNextLevelG.push(fanin);
+        // }
+        NtkNextLevelG.push(objG);
     }
     while (!NtkNextLevelF.empty() && !NtkNextLevelG.empty())
     {
